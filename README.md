@@ -43,14 +43,13 @@ agente-fvh/
 
 El agente responde exclusivamente con base en el **Manual Técnico "Forraje Verde Hidropónico"**
 de la FAO (Oficina Regional para América Latina y el Caribe, 2001), segmentado en 4 archivos PDF
-ubicados en `knowledge_base/`. El manual cubre:
+ubicados. El manual cubre:
 
 - **Primera parte:** antecedentes, justificación, ventajas y desventajas del FVH.
 - **Segunda parte:** métodos de producción, instalaciones, factores ambientales, fertilización y soluciones nutritivas.
 - **Tercera parte:** resultados de la alimentación animal con FVH (vacas lecheras, terneros, corderos, conejos).
 - **Cuarta parte:** costos de producción e impacto económico.
 
-> La FAO autoriza la reproducción fiel, completa o parcial del manual siempre que no tenga fines
 > comerciales y se mencione la fuente (ver portada del documento).
 
 ## Cómo ejecutarlo
