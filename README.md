@@ -79,4 +79,4 @@ Este proyecto fue desarrollado y probado en Google Colab. El despliegue en la nu
 
 ## Autor
 
-<!-- Cesar Estevan Barrera / Alura Latam -->
+ Cesar Estevan Barrera / Alura Latam 
