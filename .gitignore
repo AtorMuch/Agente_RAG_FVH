@@ -1,0 +1,16 @@
+# Nunca subir secretos ni entornos locales
+.env
+*.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Índice FAISS generado localmente (se reconstruye solo)
+agente_fvh_backend/faiss_index/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Sistema
+.DS_Store
