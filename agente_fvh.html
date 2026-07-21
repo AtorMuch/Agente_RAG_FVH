@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Agente FVH — Forraje Verde Hidropónico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --soil-950: #16140f;
+    --soil-900: #211e16;
+    --soil-800: #2c281d;
+    --leaf-500: #7fae3e;
+    --leaf-400: #9ac458;
+    --leaf-300: #c3dd9a;
+    --sprout-200: #e7efd6;
+    --parchment: #f4efdf;
+    --parchment-dim: #e9e2cc;
+    --clay-500: #b9713d;
+    --clay-600: #9c5d31;
+    --ink: #2a2417;
+    --ink-soft: #5a5240;
+    --danger: #b3462c;
+    --radius: 6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 700px at 85% -10%, #2f3a1c 0%, transparent 60%),
+      linear-gradient(180deg, var(--soil-950), var(--soil-900) 40%, var(--soil-900) 100%);
+    color: var(--parchment);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  /* ---------- Header ---------- */
+  header.app-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    padding-bottom:22px;
+    border-bottom: 1px solid rgba(244,239,223,0.14);
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+  .brand{ display:flex; gap:14px; align-items:center; }
+  .brand-mark{
+    width:46px;height:46px;flex:none;
+  }
+  .brand-text h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 27px;
+    letter-spacing:-0.01em;
+    margin:0 0 3px 0;
+    color: var(--sprout-200);
+  }
+  .brand-text p{
+    margin:0;
+    font-size:12.5px;
+    color: var(--leaf-300);
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    font-weight:500;
+  }
+  .head-meta{
+    text-align:right;
+    font-size:11.5px;
+    color: rgba(244,239,223,0.55);
+    line-height:1.6;
+    font-family:'JetBrains Mono', monospace;
+    max-width:260px;
+  }
+  .head-meta strong{ color: var(--leaf-400); font-weight:600; }
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns: 300px 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  @media (max-width: 880px){
+    .layout{ grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Sidebar: pipeline / seed tray ---------- */
+  .panel{
+    background: linear-gradient(180deg, rgba(244,239,223,0.05), rgba(244,239,223,0.02));
+    border:1px solid rgba(244,239,223,0.12);
+    border-radius: var(--radius);
+    padding:18px;
+  }
+  .panel + .panel{ margin-top:18px; }
+  .panel h2{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.11em;
+    color: var(--leaf-300);
+    margin:0 0 14px 0;
+    display:flex; align-items:center; gap:8px;
+  }
+  .panel h2::before{
+    content:"";
+    width:6px;height:6px;
+    background: var(--leaf-400);
+    display:inline-block;
+    border-radius:1px;
+    transform:rotate(45deg);
+  }
+
+  /* seed tray flow */
+  .tray{
+    display:flex; flex-direction:column; gap:0;
+  }
+  .cell{
+    position:relative;
+    display:flex; align-items:center; gap:11px;
+    padding:11px 10px;
+    border-radius:5px;
+    border:1px solid transparent;
+    transition: all .45s cubic-bezier(.4,0,.2,1);
+  }
+  .cell .pot{
+    width:30px;height:26px;flex:none;
+    border-radius:2px 2px 6px 6px;
+    background: rgba(244,239,223,0.08);
+    border:1px solid rgba(244,239,223,0.18);
+    position:relative;
+    display:flex; align-items:flex-end; justify-content:center;
+    overflow:hidden;
+    transition: all .5s ease;
+  }
+  .cell .sprout{
+    width:2px; height:0px;
+    background: var(--leaf-400);
+    position:relative;
+    transition: height .6s cubic-bezier(.34,1.56,.64,1);
+  }
+  .cell .sprout::before, .cell .sprout::after{
+    content:"";
+    position:absolute; bottom:2px;
+    width:8px; height:5px;
+    background: var(--leaf-400);
+    border-radius: 0 100% 0 100%;
+    opacity:0;
+    transition: opacity .3s ease .3s;
+  }
+  .cell .sprout::before{ left:-7px; transform: rotate(10deg); border-radius: 100% 0 100% 0;}
+  .cell .sprout::after{ right:-7px; transform: rotate(-10deg);}
+  .cell.active .sprout{ height:16px; }
+  .cell.active .sprout::before, .cell.active .sprout::after{ opacity:1; }
+  .cell.active .pot{ background: rgba(127,174,62,0.14); border-color: rgba(127,174,62,0.5); }
+  .cell.blocked .pot{ background: rgba(179,70,44,0.14); border-color: rgba(179,70,44,0.45); }
+  .cell.blocked .sprout{ background: var(--danger); }
+  .cell.blocked .sprout::before, .cell.blocked .sprout::after{ background: var(--danger); }
+  .cell .label{
+    font-size:13px; color: rgba(244,239,223,0.55);
+    transition: color .4s ease;
+    line-height:1.3;
+  }
+  .cell .label b{ display:block; font-size:13.5px; color:inherit; font-weight:600;}
+  .cell .label span{ font-size:10.5px; color: rgba(244,239,223,0.35); }
+  .cell.active .label{ color: var(--sprout-200); }
+  .cell.active .label b{ color: var(--leaf-400); }
+  .cell.blocked .label b{ color: var(--danger); }
+  .branch-group{
+    margin-left:18px;
+    padding-left:16px;
+    border-left:1px dashed rgba(244,239,223,0.18);
+    display:flex; flex-direction:column;
+  }
+  .stem{
+    width:1px; height:14px; background: rgba(244,239,223,0.18);
+    margin-left:24px;
+  }
+
+  .manual-index{ display:flex; flex-direction:column; gap:8px; }
+  .manual-index .part{
+    padding:9px 10px;
+    border-radius:5px;
+    border:1px solid rgba(244,239,223,0.1);
+    font-size:12px;
+    color: rgba(244,239,223,0.65);
+    display:flex; justify-content:space-between; gap:8px;
+    transition: all .3s ease;
+  }
+  .manual-index .part b{
+    display:block; color: var(--sprout-200); font-size:12.5px; font-weight:500; margin-bottom:1px;
+  }
+  .manual-index .part.lit{
+    border-color: rgba(127,174,62,0.55);
+    background: rgba(127,174,62,0.08);
+  }
+  .manual-index .part .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:9.5px;
+    color: var(--clay-500);
+    white-space:nowrap;
+    align-self:flex-start;
+    padding-top:2px;
+  }
+
+  .source-note{
+    font-size:11px; line-height:1.55; color: rgba(244,239,223,0.4);
+    margin-top:4px;
+  }
+  .source-note a{ color: var(--leaf-300); }
+
+  /* ---------- Chat column ---------- */
+  .chat-col{ display:flex; flex-direction:column; gap:16px; min-height:520px; }
+  .chat-scroll{
+    background: linear-gradient(180deg, rgba(244,239,223,0.045), rgba(244,239,223,0.015));
+    border:1px solid rgba(244,239,223,0.12);
+    border-radius: var(--radius);
+    padding:22px;
+    flex:1;
+    display:flex; flex-direction:column; gap:16px;
+    min-height:420px;
+    max-height:560px;
+    overflow-y:auto;
+  }
+  .chat-scroll::-webkit-scrollbar{ width:8px; }
+  .chat-scroll::-webkit-scrollbar-thumb{ background: rgba(244,239,223,0.15); border-radius:4px; }
+
+  .empty-state{
+    margin:auto; text-align:center; max-width:420px;
+    color: rgba(244,239,223,0.45);
+  }
+  .empty-state .glyph{ font-size:34px; margin-bottom:10px; }
+  .empty-state h3{ font-family:'Fraunces', serif; font-weight:500; font-size:19px; color: var(--sprout-200); margin:0 0 8px;}
+  .empty-state p{ font-size:13px; line-height:1.6; margin:0 0 18px;}
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .chip{
+    font-size:12px; padding:7px 12px; border-radius:100px;
+    background: rgba(127,174,62,0.1);
+    border:1px solid rgba(127,174,62,0.35);
+    color: var(--leaf-300);
+    cursor:pointer;
+    transition: all .2s ease;
+    font-family:'Space Grotesk', sans-serif;
+  }
+  .chip:hover{ background: rgba(127,174,62,0.2); border-color: var(--leaf-400); color: var(--sprout-200); }
+
+  .msg{ display:flex; flex-direction:column; gap:6px; max-width:86%; }
+  .msg.user{ align-self:flex-end; align-items:flex-end; }
+  .msg.agent{ align-self:flex-start; align-items:flex-start; }
+  .bubble{
+    padding:12px 14px;
+    border-radius:5px;
+    font-size:14.5px;
+    line-height:1.62;
+  }
+  .msg.user .bubble{
+    background: var(--clay-600);
+    color: var(--parchment);
+    border:1px solid rgba(244,239,223,0.12);
+  }
+  .msg.agent .bubble{
+    background: var(--parchment);
+    color: var(--ink);
+    border:1px solid var(--parchment-dim);
+  }
+  .msg.agent .bubble.blocked{
+    background: rgba(179,70,44,0.12);
+    color: var(--sprout-200);
+    border:1px solid rgba(179,70,44,0.4);
+  }
+  .msg.agent .bubble.advisor{
+    background: rgba(185,113,61,0.14);
+    color: var(--sprout-200);
+    border:1px solid rgba(185,113,61,0.45);
+  }
+  .route-tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:2px 7px;
+    border-radius:3px;
+    display:inline-flex; align-items:center; gap:5px;
+  }
+  .route-tag.responder{ background: rgba(127,174,62,0.18); color: var(--leaf-400); }
+  .route-tag.fuera{ background: rgba(179,70,44,0.18); color: #e08064; }
+  .route-tag.asesor{ background: rgba(185,113,61,0.18); color: #e0a56f; }
+  .sources{
+    display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;
+  }
+  .source-pill{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    padding:3px 8px;
+    border-radius:3px;
+    background: rgba(127,174,62,0.08);
+    border:1px solid rgba(127,174,62,0.3);
+    color: var(--leaf-300);
+  }
+
+  .thinking{
+    align-self:flex-start;
+    display:flex; align-items:center; gap:9px;
+    color: rgba(244,239,223,0.5);
+    font-size:12.5px;
+    font-family:'JetBrains Mono', monospace;
+    padding:4px 2px;
+  }
+  .thinking .dots{ display:flex; gap:3px; }
+  .thinking .dots span{
+    width:5px;height:5px;border-radius:50%;
+    background: var(--leaf-400);
+    animation: bob 1s infinite ease-in-out;
+  }
+  .thinking .dots span:nth-child(2){ animation-delay:.15s; }
+  .thinking .dots span:nth-child(3){ animation-delay:.3s; }
+  @keyframes bob{ 0%,60%,100%{ transform:translateY(0); opacity:.5;} 30%{ transform:translateY(-4px); opacity:1;} }
+
+  /* ---------- Input ---------- */
+  .input-row{
+    display:flex; gap:10px;
+    background: rgba(244,239,223,0.04);
+    border:1px solid rgba(244,239,223,0.15);
+    border-radius: var(--radius);
+    padding:8px 8px 8px 16px;
+  }
+  .input-row input{
+    flex:1; background:transparent; border:none; outline:none;
+    color: var(--sprout-200);
+    font-family:'Space Grotesk', sans-serif;
+    font-size:14.5px;
+  }
+  .input-row input::placeholder{ color: rgba(244,239,223,0.35); }
+  .input-row button{
+    background: var(--leaf-500);
+    color: #16240a;
+    border:none;
+    border-radius:4px;
+    padding:0 20px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+    transition: background .2s ease;
+  }
+  .input-row button:hover{ background: var(--leaf-400); }
+  .input-row button:disabled{ background: rgba(244,239,223,0.15); color: rgba(244,239,223,0.4); cursor:not-allowed; }
+
+  .foot-note{
+    text-align:center;
+    font-size:11px;
+    color: rgba(244,239,223,0.3);
+    font-family:'JetBrains Mono', monospace;
+    margin-top:4px;
+  }
+
+  .err-banner{
+    background: rgba(179,70,44,0.15);
+    border:1px solid rgba(179,70,44,0.4);
+    color:#f0b8a5;
+    padding:10px 14px;
+    border-radius:5px;
+    font-size:12.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app-head">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="30" width="40" height="12" rx="2" fill="#2c281d" stroke="#7fae3e" stroke-width="1.4"/>
+        <line x1="14" y1="30" x2="14" y2="42" stroke="#7fae3e" stroke-width="1" opacity="0.5"/>
+        <line x1="24" y1="30" x2="24" y2="42" stroke="#7fae3e" stroke-width="1" opacity="0.5"/>
+        <line x1="34" y1="30" x2="34" y2="42" stroke="#7fae3e" stroke-width="1" opacity="0.5"/>
+        <path d="M9 30 C9 22, 9 20, 9 16" stroke="#9ac458" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 20 C6 18, 5 16, 4 14" stroke="#9ac458" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 20 C12 18, 13 16, 14 14" stroke="#9ac458" stroke-width="2" stroke-linecap="round"/>
+        <path d="M19 30 C19 20, 19 18, 19 12" stroke="#7fae3e" stroke-width="2" stroke-linecap="round"/>
+        <path d="M19 17 C16 15, 15 13, 14 11" stroke="#7fae3e" stroke-width="2" stroke-linecap="round"/>
+        <path d="M19 17 C22 15, 23 13, 24 11" stroke="#7fae3e" stroke-width="2" stroke-linecap="round"/>
+        <path d="M29 30 C29 21, 29 19, 29 15" stroke="#9ac458" stroke-width="2" stroke-linecap="round"/>
+        <path d="M29 19 C26 17, 25 15, 24 13" stroke="#9ac458" stroke-width="2" stroke-linecap="round"/>
+        <path d="M29 19 C32 17, 33 15, 34 13" stroke="#9ac458" stroke-width="2" stroke-linecap="round"/>
+        <path d="M39 30 C39 23, 39 21, 39 17" stroke="#7fae3e" stroke-width="2" stroke-linecap="round"/>
+        <path d="M39 20 C36 18, 35 16, 34 15" stroke="#7fae3e" stroke-width="2" stroke-linecap="round"/>
+        <path d="M39 20 C42 18, 43 16, 44 15" stroke="#7fae3e" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="brand-text">
+        <h1>Agente FVH</h1>
+        <p>Forraje Verde Hidropónico · Manual Técnico FAO</p>
+      </div>
+    </div>
+    <div class="head-meta">
+      Pipeline: <strong>triaje → responder / fuera_tema / asesor</strong><br/>
+      Base documental: 4 secciones · FAO, Chile, 2001<br/>
+      Alcance: exclusivo sobre FVH
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="panel">
+        <h2>Flujo del agente</h2>
+        <div class="tray" id="pipeline">
+          <div class="cell" data-node="triaje">
+            <div class="pot"><div class="sprout"></div></div>
+            <div class="label"><b>Triaje</b><span>clasifica la intención</span></div>
+          </div>
+          <div class="stem"></div>
+          <div class="branch-group">
+            <div class="cell" data-node="responder">
+              <div class="pot"><div class="sprout"></div></div>
+              <div class="label"><b>Responder</b><span>RAG · manual FAO</span></div>
+            </div>
+            <div class="cell" data-node="fuera_tema">
+              <div class="pot"><div class="sprout"></div></div>
+              <div class="label"><b>Fuera de tema</b><span>fuera de alcance</span></div>
+            </div>
+            <div class="cell" data-node="asesor">
+              <div class="pot"><div class="sprout"></div></div>
+              <div class="label"><b>Asesor</b><span>deriva a humano</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Base documental</h2>
+        <div class="manual-index" id="manual-index">
+          <div class="part" data-file="ah472s00.pdf">
+            <div><b>Primera parte</b>Antecedentes, ventajas y desventajas</div>
+            <div class="tag">s00</div>
+          </div>
+          <div class="part" data-file="ah472s01.pdf">
+            <div><b>Segunda parte</b>Métodos, instalaciones, fertilización</div>
+            <div class="tag">s01</div>
+          </div>
+          <div class="part" data-file="ah472s02.pdf">
+            <div><b>Tercera parte</b>Alimentación animal</div>
+            <div class="tag">s02</div>
+          </div>
+          <div class="part" data-file="ah472s03.pdf">
+            <div><b>Cuarta parte</b>Costos e impacto económico</div>
+            <div class="tag">s03</div>
+          </div>
+        </div>
+        <p class="source-note">Manual Técnico "Forraje Verde Hidropónico", FAO — Oficina Regional para América Latina y el Caribe, Santiago de Chile, 2001. Reproducción autorizada por la FAO con fines no comerciales, citando la fuente. Basado en <a href="https://github.com/AtorMuch/Agente_RAG_FVH" target="_blank" rel="noopener">AtorMuch/Agente_RAG_FVH</a>.</p>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat-col">
+      <div class="chat-scroll" id="chat-scroll">
+        <div class="empty-state" id="empty-state">
+          <div class="glyph">🌱</div>
+          <h3>Preguntá sobre FVH</h3>
+          <p>Este agente solo responde con base en el Manual Técnico de la FAO sobre Forraje Verde Hidropónico. Si la pregunta se sale de tema, lo va a decir; si pedís un asesor, te deriva.</p>
+          <div class="chips" id="chips">
+            <div class="chip" data-q="¿Qué es el Forraje Verde Hidropónico?">¿Qué es el FVH?</div>
+            <div class="chip" data-q="¿Cuáles son las ventajas del FVH frente al forraje tradicional?">Ventajas vs. forraje tradicional</div>
+            <div class="chip" data-q="¿Qué semillas se pueden utilizar para producir FVH?">Semillas utilizables</div>
+            <div class="chip" data-q="¿Cuánto tiempo tarda la producción?">Tiempo de producción</div>
+            <div class="chip" data-q="¿Cuál es el costo aproximado de producción?">Costos de producción</div>
+            <div class="chip" data-q="¿Quién ganó el mundial de fútbol?">Pregunta fuera de tema</div>
+            <div class="chip" data-q="Quiero hablar con un asesor">Hablar con un asesor</div>
+          </div>
+        </div>
+      </div>
+      <div id="err-slot"></div>
+      <div class="input-row">
+        <input id="q-input" type="text" placeholder="Escribí tu pregunta sobre FVH…" />
+        <button id="send-btn">Enviar</button>
+      </div>
+      <div class="foot-note">triaje + RAG · LangGraph + FAISS + gpt-4.1-mini · backend Python propio</div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+/* ============================================================
+   Config: URL del backend Python (FastAPI) — ver /agente_fvh_backend
+   Cambiá esto por la URL donde despliegues tu API (Render, Railway,
+   tu propio servidor, etc). En local, con `uvicorn main:app --port 8000`
+   queda en http://localhost:8000
+   ============================================================ */
+const API_BASE_URL = "http://localhost:8000";
+
+const MSG_FUERA_TEMA = "No lo sé. Solo soy un asistente experto en Forraje Verde Hidropónico (FVH), así que no puedo ayudarte con ese tema.";
+const MSG_ASESOR = "Voy a comunicarte con un asesor humano para que te ayude con esto. En breve alguien del equipo se pondrá en contacto contigo.";
+
+const chatScroll = document.getElementById('chat-scroll');
+const emptyState = document.getElementById('empty-state');
+const input = document.getElementById('q-input');
+const sendBtn = document.getElementById('send-btn');
+const errSlot = document.getElementById('err-slot');
+
+document.getElementById('chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  input.value = chip.dataset.q;
+  handleSend();
+});
+
+sendBtn.addEventListener('click', handleSend);
+input.addEventListener('keydown', (e) => { if(e.key === 'Enter') handleSend(); });
+
+function setPipeline(activeNode, blocked){
+  document.querySelectorAll('.cell').forEach(c => {
+    c.classList.remove('active','blocked');
+  });
+  const triajeCell = document.querySelector('.cell[data-node="triaje"]');
+  if(activeNode) triajeCell.classList.add('active');
+  if(activeNode && activeNode !== 'triaje'){
+    const target = document.querySelector('.cell[data-node="'+activeNode+'"]');
+    if(target) target.classList.add(blocked ? 'blocked' : 'active');
+  }
+}
+
+function litSources(files){
+  document.querySelectorAll('.manual-index .part').forEach(p => {
+    p.classList.toggle('lit', files && files.includes(p.dataset.file));
+  });
+}
+
+function addUserMsg(text){
+  emptyState.style.display = 'none';
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = '<div class="bubble"></div>';
+  div.querySelector('.bubble').textContent = text;
+  chatScroll.appendChild(div);
+  chatScroll.scrollTop = chatScroll.scrollHeight;
+}
+
+function addThinking(){
+  const div = document.createElement('div');
+  div.className = 'thinking';
+  div.id = 'thinking-indicator';
+  div.innerHTML = 'consultando al agente <span class="dots"><span></span><span></span><span></span></span>';
+  chatScroll.appendChild(div);
+  chatScroll.scrollTop = chatScroll.scrollHeight;
+  return div;
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatText(t){
+  return escapeHtml(t).replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br/>');
+}
+
+function addAgentMsg({routeLabel, routeClass, text, sources, variant}){
+  const div = document.createElement('div');
+  div.className = 'msg agent';
+  let sourcesHtml = '';
+  if(sources && sources.length){
+    sourcesHtml = '<div class="sources">' + sources.map(s => '<span class="source-pill">'+escapeHtml(s)+'</span>').join('') + '</div>';
+  }
+  div.innerHTML = `
+    <span class="route-tag ${routeClass}">${routeLabel}</span>
+    <div class="bubble ${variant||''}"><p>${formatText(text)}</p></div>
+    ${sourcesHtml}
+  `;
+  chatScroll.appendChild(div);
+  chatScroll.scrollTop = chatScroll.scrollHeight;
+}
+
+function showError(msg){
+  errSlot.innerHTML = '<div class="err-banner">'+escapeHtml(msg)+'</div>';
+  setTimeout(() => { errSlot.innerHTML = ''; }, 6000);
+}
+
+/* ============================================================
+   Llamada al backend Python (agente_fvh_backend/main.py)
+   POST /consultar  { pregunta }
+   ->   { decision, accion_final, respuesta, fuentes }
+   ============================================================ */
+async function consultarAgente(pregunta){
+  const response = await fetch(API_BASE_URL + "/consultar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pregunta })
+  });
+  if(!response.ok){
+    const errText = await response.text();
+    throw new Error("API error " + response.status + ": " + errText);
+  }
+  return await response.json();
+}
+
+let busy = false;
+
+async function handleSend(){
+  if(busy) return;
+  const pregunta = input.value.trim();
+  if(!pregunta) return;
+  input.value = '';
+  busy = true;
+  sendBtn.disabled = true;
+
+  addUserMsg(pregunta);
+  setPipeline(null);
+  litSources([]);
+  const thinkingEl = addThinking();
+
+  try{
+    setPipeline('triaje');
+    const result = await consultarAgente(pregunta);
+    const accion = result.accion_final || result.decision;
+    thinkingEl.remove();
+
+    if(accion === 'FUERA_TEMA'){
+      setPipeline('fuera_tema', true);
+      addAgentMsg({ routeLabel:'fuera_tema', routeClass:'fuera', text: result.respuesta || MSG_FUERA_TEMA, variant:'blocked' });
+    } else if(accion === 'ASESOR'){
+      setPipeline('asesor');
+      addAgentMsg({ routeLabel:'asesor', routeClass:'asesor', text: result.respuesta || MSG_ASESOR, variant:'advisor' });
+    } else {
+      setPipeline('responder');
+      litSources(result.fuentes);
+      addAgentMsg({ routeLabel:'responder · rag', routeClass:'responder', text: result.respuesta, sources: result.fuentes });
+    }
+  } catch(err){
+    thinkingEl.remove();
+    setPipeline(null);
+    showError('No se pudo conectar con el backend (' + API_BASE_URL + '): ' + err.message);
+  } finally {
+    busy = false;
+    sendBtn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
