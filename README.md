@@ -1,81 +1,38 @@
-# Agente RAG - Forraje Verde Hidropónico (FVH)
+# Proyecto Agente FVH — Backend + Frontend
 
-Agente experto en Forraje Verde Hidropónico (FVH), construido con **LangGraph** + **RAG**,
-basado en el Manual Técnico de la FAO.
-
-## Arquitectura
-
-El flujo del agente clasifica cada pregunta del usuario mediante un nodo de **triaje** y la
-enruta a una de tres rutas:
-
-1. **RESPONDER** → Se ejecuta la cadena RAG sobre el manual FAO (embeddings + FAISS + LLM).
-2. **FUERA_TEMA** → El agente responde que no puede ayudar, ya que solo es experto en FVH.
-3. **ASESOR** → Se deriva al usuario a un asesor humano con un mensaje predefinido.
+Este paquete contiene los dos componentes conectados:
 
 ```
-START -> triaje -> [responder | fuera_tema | asesor] -> END
+agente_fvh_proyecto/
+├── agente_fvh.html          # Frontend: la app de chat (abrir en el navegador)
+└── agente_fvh_backend/      # Backend: API en Python (FastAPI + LangGraph + RAG)
+    ├── main.py               # Endpoints /health y /consultar
+    ├── rag_agent.py          # Triaje + RAG + grafo LangGraph
+    ├── requirements.txt
+    ├── Dockerfile
+    ├── .env.example
+    ├── README.md             # Instrucciones detalladas del backend
+    └── knowledge_base/       # Los 4 PDFs del manual FAO (ya incluidos)
 ```
 
-## Tecnologías
+## Pasos rápidos
 
-- `langchain` / `langchain-openai` / `langchain-community` / `langchain-classic`
-- `langgraph` (orquestación del flujo como grafo de estados)
-- `faiss-cpu` (vector store)
-- `pymupdf` (carga de PDFs)
-- Modelo LLM: `gpt-4.1-mini`
-- Modelo de embeddings: `text-embedding-3-small`
+1. **Backend:**
+   ```bash
+   cd agente_fvh_backend
+   python -m venv .venv && source .venv/bin/activate
+   pip install -r requirements.txt
+   cp .env.example .env   # y poné tu OPENAI_API_KEY en .env
+   uvicorn main:app --reload --port 8000
+   ```
+   La primera vez tarda 1-2 minutos: lee los 4 PDFs, genera los embeddings y arma el índice FAISS (queda cacheado en `faiss_index/` para los próximos arranques).
 
-## Estructura del repositorio
+2. **Frontend:**
+   Abrí `agente_fvh.html` en el navegador. Ya está configurado para apuntar a `http://localhost:8000`. Si vas a correr el backend en otra URL (por ejemplo, después de desplegarlo), editá esta línea al principio del `<script>` final del HTML:
+   ```js
+   const API_BASE_URL = "http://localhost:8000";
+   ```
 
-```
-agente-fvh/
-├── agente_rag_de_fvh.py     # Script principal del agente
-# PDFs del manual FAO, segmentados por parte
-│   ├── ah472s00.pdf         # Portada, índice y Primera Parte (antecedentes, ventajas/desventajas)
-│   ├── ah472s01.pdf         # Segunda Parte (métodos, instalaciones, factores de producción, fertilización)
-│   ├── ah472s02.pdf         # Tercera Parte (resultados en alimentación animal)
-│   └── ah472s03.pdf         # Cuarta Parte (costos de producción e impacto económico) + conclusiones
+3. **Probar:** escribí una pregunta sobre FVH (o usá los chips sugeridos) y vas a ver el pipeline triaje → responder/fuera_tema/asesor funcionando contra tu backend real.
 
-└── README.md
-```
-
-## Base documental (RAG)
-
-El agente responde exclusivamente con base en el **Manual Técnico "Forraje Verde Hidropónico"**
-de la FAO (Oficina Regional para América Latina y el Caribe, 2001), segmentado en 4 archivos PDF
-ubicados. El manual cubre:
-
-- **Primera parte:** antecedentes, justificación, ventajas y desventajas del FVH.
-- **Segunda parte:** métodos de producción, instalaciones, factores ambientales, fertilización y soluciones nutritivas.
-- **Tercera parte:** resultados de la alimentación animal con FVH (vacas lecheras, terneros, corderos, conejos).
-- **Cuarta parte:** costos de producción e impacto económico.
-
-> comerciales y se mencione la fuente (ver portada del documento).
-
-## Cómo ejecutarlo
-
-### Google Colab (como fue desarrollado originalmente)
-
-1. Abrir el notebook en Colab.
-2. Guardar la API key de OpenAI en el gestor de secretos de Colab con el nombre `OPENAI_API_KEY`.
-3. Subir los PDFs del manual FAO a `/content/`.
-4. Ejecutar las celdas en orden.
-
-
-## Ejemplo de uso
-
-```python
-respuesta = grafo.invoke({"pregunta": "¿Cuáles son las ventajas del FVH frente al forraje tradicional?"})
-print(respuesta["respuesta"])
-```
-
-## Estado del despliegue
-
-Este proyecto fue desarrollado y probado en Google Colab. El despliegue en la nube
-(Oracle Cloud Infrastructure) queda pendiente como trabajo futuro.
-
-
-
-## Autor
-
- Cesar Estevan Barrera / Alura Latam 
+Para instrucciones de despliegue en producción (Docker, Render, Railway, etc.), ver `agente_fvh_backend/README.md`.
