@@ -36,3 +36,11 @@ agente_fvh_proyecto/
 3. **Probar:** escribí una pregunta sobre FVH (o usá los chips sugeridos) y vas a ver el pipeline triaje → responder/fuera_tema/asesor funcionando contra tu backend real.
 
 Para instrucciones de despliegue en producción (Docker, Render, Railway, etc.), ver `agente_fvh_backend/README.md`.
+
+
+# Respuesda dada por el agente
+
+Puedes promar en este link: https://atormuch.github.io/Agente_RAG_FVH/
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/4647040c-a28e-4627-951c-52403afba6ce" />
+
