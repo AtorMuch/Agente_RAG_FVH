@@ -10,6 +10,7 @@ Correr localmente:
     uvicorn main:app --reload --port 8000
 
 Endpoints:
+    GET  /            -> información de la API
     GET  /health      -> chequeo de salud
     POST /consultar   -> {"pregunta": "..."} -> respuesta del agente
 """
@@ -33,14 +34,15 @@ app = FastAPI(
 )
 
 # --------------------------------------------------------------------------
-# CORS: permite que el frontend (servido desde otro origen, ej. GitHub Pages,
-# Netlify, o simplemente abierto como archivo local) pueda llamar a esta API.
-# En producción, reemplazá "*" por el dominio real del frontend en la env var
-# ALLOWED_ORIGINS (separados por coma).
+# Configuración CORS
 # --------------------------------------------------------------------------
+
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+
 allowed_origins = (
-    ["*"] if allowed_origins_env.strip() == "*" else [o.strip() for o in allowed_origins_env.split(",")]
+    ["*"]
+    if allowed_origins_env.strip() == "*"
+    else [o.strip() for o in allowed_origins_env.split(",")]
 )
 
 app.add_middleware(
@@ -52,8 +54,16 @@ app.add_middleware(
 )
 
 
+# --------------------------------------------------------------------------
+# Modelos
+# --------------------------------------------------------------------------
+
 class ConsultaRequest(BaseModel):
-    pregunta: str = Field(..., min_length=1, description="Pregunta del usuario sobre FVH")
+    pregunta: str = Field(
+        ...,
+        min_length=1,
+        description="Pregunta del usuario sobre FVH"
+    )
 
 
 class ConsultaResponse(BaseModel):
@@ -63,37 +73,51 @@ class ConsultaResponse(BaseModel):
     fuentes: list[str]
 
 
+# --------------------------------------------------------------------------
+# Endpoints
+# --------------------------------------------------------------------------
+
 @app.get("/")
 def root():
     return {
         "status": "ok",
         "mensaje": "Agente FVH API funcionando",
+        "version": "1.0.0",
         "docs": "/docs",
         "health": "/health"
     }
-# ✅ Health Check
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok"
+    }
+
 
 @app.post("/consultar", response_model=ConsultaResponse)
 def consultar(payload: ConsultaRequest):
+
     pregunta = payload.pregunta.strip()
+
     if not pregunta:
-        raise HTTPException(status_code=400, detail="La pregunta no puede estar vacía.")
+        raise HTTPException(
+            status_code=400,
+            detail="La pregunta no puede estar vacía."
+        )
 
     try:
-        # Import diferido para que el índice FAISS se construya recién al
-        # levantar el proceso (no al importar este módulo en herramientas
-        # de testing, etc.)
+        # Import diferido para evitar cargar el RAG al importar el módulo
         from rag_agent import ejecutar_agente
 
         resultado = ejecutar_agente(pregunta)
+
         return resultado
-    
+
     except Exception as e:
         logger.exception("Error ejecutando el agente")
+
         raise HTTPException(
             status_code=500,
             detail=f"Error del agente: {e}"
-        )
+        ) from e
