@@ -63,10 +63,18 @@ class ConsultaResponse(BaseModel):
     fuentes: list[str]
 
 
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "mensaje": "Agente FVH API funcionando",
+        "docs": "/docs",
+        "health": "/health"
+    }
+# ✅ Health Check
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
 
 @app.post("/consultar", response_model=ConsultaResponse)
 def consultar(payload: ConsultaRequest):
@@ -82,6 +90,10 @@ def consultar(payload: ConsultaRequest):
 
         resultado = ejecutar_agente(pregunta)
         return resultado
-    except Exception as e:  # noqa: BLE001
+    
+    except Exception as e:
         logger.exception("Error ejecutando el agente")
-        raise HTTPException(status_code=500, detail=f"Error del agente: {e}") from e
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error del agente: {e}"
+        )
